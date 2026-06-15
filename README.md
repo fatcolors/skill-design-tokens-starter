@@ -1,4 +1,4 @@
-# Figma Design Tokens & Design System — Claude Skill
+# Design Tokens Starter — a Figma Design System skill for Claude
 
 A [Claude](https://claude.com/claude-code) **skill** that builds a complete, production-grade design system **directly in Figma** — a full multi-tier token architecture *and* token-bound components — by driving the Figma Plugin API through the Figma MCP. No manual JSON wrangling, no Token Studio export/import dance.
 
@@ -62,27 +62,27 @@ Pick whichever you prefer.
 
 ### Option A — the packaged `.skill` file (easiest)
 
-Download **[`figma-design-tokens.skill`](figma-design-tokens.skill)** from this repo and install it in the Claude app (**Settings → Capabilities / Skills → add a skill**). A `.skill` file is just a zip — if your client has no import button, rename it to `.zip` and unzip it into your skills folder (see Option B for the location). Then start a new session.
+Download **[`design-tokens-starter.skill`](design-tokens-starter.skill)** from this repo and install it in the Claude app (**Settings → Capabilities / Skills → add a skill**). A `.skill` file is just a zip — if your client has no import button, rename it to `.zip` and unzip it into your skills folder (see Option B for the location). Then start a new session.
 
 ### Option B — copy the folder manually
 
-Claude Code loads personal skills from a `skills` folder in your Claude config directory. Drop the `figma-design-tokens` folder there:
+Claude Code loads personal skills from a `skills` folder in your Claude config directory. Drop the `design-tokens-starter` folder there:
 
 **macOS / Linux**
 ```bash
 git clone https://github.com/fatcolors/skill-design-tokens-starter.git
-cp -r skill-design-tokens-starter/figma-design-tokens ~/.claude/skills/
+cp -r skill-design-tokens-starter/design-tokens-starter ~/.claude/skills/
 ```
 
 **Windows (PowerShell)**
 ```powershell
 git clone https://github.com/fatcolors/skill-design-tokens-starter.git
-Copy-Item -Recurse skill-design-tokens-starter\figma-design-tokens "$env:USERPROFILE\.claude\skills\"
+Copy-Item -Recurse skill-design-tokens-starter\design-tokens-starter "$env:USERPROFILE\.claude\skills\"
 ```
 
-Then **start a new Claude Code session** so it picks up the skill. You should now have `figma-design-tokens` available. To confirm, ask Claude: *"what skills do you have for Figma design tokens?"*
+Then **start a new Claude Code session** so it picks up the skill. You should now have `design-tokens-starter` available. To confirm, ask Claude: *"what skills do you have for Figma design tokens?"*
 
-> The folder that must end up at `~/.claude/skills/figma-design-tokens/` contains `SKILL.md` and a `references/` folder. Keep them together.
+> The folder that must end up at `~/.claude/skills/design-tokens-starter/` contains `SKILL.md` and a `references/` folder. Keep them together.
 
 ---
 
@@ -126,14 +126,14 @@ Every color the component uses is bound to a **Mapped** token (`surface/brand`, 
 - **One source of truth.** Tweak a base color in **Brand** and every component that uses it updates through the alias chain.
 - **New components stay in the system.** Anything you ask the skill to build references the tokens automatically, so your library never drifts into detached hex values.
 
-A worked example (a 15-variant Button: Type × State, with an editable Label property) and the full component recipe live in [`figma-design-tokens/references/components.md`](figma-design-tokens/references/components.md).
+A worked example (a 15-variant Button: Type × State, with an editable Label property) and the full component recipe live in [`design-tokens-starter/references/components.md`](design-tokens-starter/references/components.md).
 
 ---
 
 ## What's in the box
 
 ```
-figma-design-tokens/
+design-tokens-starter/
 ├── SKILL.md                      # the workflow Claude follows
 └── references/
     ├── architecture.md           # tier rules, role mapping, default token set, scope table

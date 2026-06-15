@@ -1,5 +1,5 @@
 ---
-name: figma-design-tokens
+name: design-tokens-starter
 description: >-
   Build a multi-tier design system directly in Figma via the Figma MCP: Brand (raw color
   scales) → Alias (semantic roles) → Mapped (component tokens, Light/Dark) → Responsive (typography,
@@ -14,7 +14,7 @@ description: >-
   and modes, avoiding the native-import limitation that breaks references.
 ---
 
-# Figma Design Tokens
+# Design Tokens Starter
 
 Build a production-grade, multi-tier design-token system as **real Figma variables**, fully wired with cross-collection references and modes, by driving the Figma Plugin API through the `use_figma` MCP tool.
 
