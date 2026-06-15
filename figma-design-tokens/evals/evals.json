@@ -1,0 +1,23 @@
+{
+  "skill_name": "figma-design-tokens",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I exported my color scales from Figma as a variables JSON (it's in this folder, brand.tokens.json). Can you turn it into a proper token system in my Figma file https://www.figma.com/design/EXAMPLEKEY/My-Tokens — I want raw scales, semantic roles, and component tokens with light and dark modes, all linked so changing a base color updates everything.",
+      "expected_output": "Three connected collections in the file — Brand (raw scales from the JSON), Alias (semantic roles aliased to Brand), Mapped (surface/text/icon/border with Light+Dark, aliased to Alias). Cross-collection references resolve; Brand/Alias hidden from pickers.",
+      "files": ["brand.tokens.json"]
+    },
+    {
+      "id": 2,
+      "prompt": "here's my tailwind-ish palette as hex (gray, slate, red, orange, green, blue, violet — 50 through 950). build me figma variables in https://www.figma.com/design/EXAMPLEKEY/Palette with a primitive -> semantic -> component structure, light + dark. you pick the accent and the role mapping, don't ask me a million questions.",
+      "expected_output": "Brand primitives from the hex, Alias semantic roles (sensible auto-chosen mapping incl. an accent), Mapped component tokens with Light/Dark modes, all aliased. Decisions stated, not asked.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Set up a responsive typography system as Figma variables in https://www.figma.com/design/EXAMPLEKEY/Type — font sizes, line heights and paragraph spacing for hero, h1-h6 and body/caption, that change between desktop and mobile. And make text styles I can actually apply, bound to those variables. Keep body at 16px on mobile.",
+      "expected_output": "A Responsive collection (Desktop/Mobile modes) of FLOAT vars for font-size/line-height/paragraph-spacing across the type scale, body=16 on mobile, plus bound Figma text styles (Hero, H1-H6, Paragraph L/M/S, Caption).",
+      "files": []
+    }
+  ]
+}
