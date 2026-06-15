@@ -1,20 +1,17 @@
 ---
 name: figma-design-tokens
 description: >-
-  Generate a complete, multi-tier design-token system directly as Figma variables through the Figma
-  MCP — Brand (raw color scales) → Alias (semantic roles) → Mapped (component tokens, Light/Dark) →
-  Responsive (typography, Desktop/Mobile) → bound text styles. Use this whenever the user wants to
-  build, generate, set up, or restructure design tokens, Figma variables, a token/variable system or
-  collections, convert a color palette into Figma variables, or create a primitive→semantic→component
-  (a.k.a. brand→alias→mapped) token architecture — even when phrased loosely ("set up my design
-  tokens", "turn this palette into Figma variables", "make a proper variable system", "vibe code my
-  Figma variables"). Writes variables directly via the Plugin API (use_figma) with real
-  cross-collection aliases and modes, which is what makes light/dark and desktop/mobile work and
-  avoids the native-import limitation that silently breaks references. Also builds the rest of the
-  design system on top of those tokens — token-bound components (buttons, inputs, cards, badges…)
-  with full variant/state matrices whose every fill, border, and label color is wired to the tokens
-  so they theme automatically. Use it too whenever the user wants a Figma design system, design-system
-  components, or to "create a component using my variables/tokens."
+  Build a multi-tier design system directly in Figma via the Figma MCP: Brand (raw color
+  scales) → Alias (semantic roles) → Mapped (component tokens, Light/Dark) → Responsive (typography,
+  Desktop/Mobile) → bound text styles, plus token-bound components (buttons, inputs, cards…) whose
+  every fill, border and label color is wired to the tokens so they theme automatically. Use whenever
+  the user wants to build, set up, or restructure design tokens, Figma variables, a token/variable
+  system or collections, convert a palette into Figma variables, create a
+  primitive→semantic→component (brand→alias→mapped) architecture, build a Figma design system, or
+  create a component using existing variables/tokens — even when phrased loosely ("set up my design
+  tokens", "turn this palette into Figma variables", "vibe code my Figma variables", "create a Button
+  with my tokens"). Writes variables directly via the Plugin API with real cross-collection aliases
+  and modes, avoiding the native-import limitation that breaks references.
 ---
 
 # Figma Design Tokens

@@ -4,6 +4,22 @@ A [Claude](https://claude.com/claude-code) **skill** that builds a complete, pro
 
 You give Claude a color palette and a Figma file. It builds the variables, modes, text styles, and components, all properly connected.
 
+## See it in action
+
+Real output from the skill in a Figma file:
+
+**Button — every state, bound to tokens** (no hardcoded hex; the Focused column shows the `border/focus` ring, Disabled uses `surface/disabled`, the ghost row is Tertiary)
+
+![Button states](images/button-states.png)
+
+**Light / Dark — one component, two modes** (the same card, with the `Mapped` collection set to Light vs Dark — colors resolve through `Mapped → Alias → Brand`)
+
+![Light and dark card](images/light-dark-card.png)
+
+**Type scale — bound text styles** (Hero → Caption, each style bound to the Responsive `font-size` / `line-height` variables)
+
+![Type scale](images/type-scale.png)
+
 ---
 
 ## What you get
@@ -42,7 +58,15 @@ Because everything is connected through `Mapped → Alias → Brand`, **changing
 
 ## Installation
 
-Claude Code loads personal skills from a `skills` folder in your Claude config directory. Drop this skill there:
+Pick whichever you prefer.
+
+### Option A — the packaged `.skill` file (easiest)
+
+Download **[`figma-design-tokens.skill`](figma-design-tokens.skill)** from this repo and install it in the Claude app (**Settings → Capabilities / Skills → add a skill**). A `.skill` file is just a zip — if your client has no import button, rename it to `.zip` and unzip it into your skills folder (see Option B for the location). Then start a new session.
+
+### Option B — copy the folder manually
+
+Claude Code loads personal skills from a `skills` folder in your Claude config directory. Drop the `figma-design-tokens` folder there:
 
 **macOS / Linux**
 ```bash
