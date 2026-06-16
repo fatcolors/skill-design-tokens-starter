@@ -1,6 +1,6 @@
-# Design Tokens Starter — a Figma Design System skill for Claude
+# Design Tokens Starter - a Figma Design System skill for Claude
 
-A [Claude](https://claude.com/claude-code) **skill** that builds a complete, production-grade design system **directly in Figma** — a full multi-tier token architecture *and* token-bound components — by driving the Figma Plugin API through the Figma MCP. No manual JSON wrangling, no Token Studio export/import dance.
+A Claude **skill** that builds a complete, production-grade design system **directly in Figma** - a full multi-tier token architecture *and* token-bound components - by driving the Figma Plugin API through the Figma MCP. No manual JSON wrangling, no Token Studio export/import dance.
 
 You give Claude a color palette and a Figma file. It builds the variables, modes, text styles, and components, all properly connected.
 
@@ -8,7 +8,7 @@ You give Claude a color palette and a Figma file. It builds the variables, modes
 
 Real output from the skill in a Figma file:
 
-**Button — every state, bound to tokens** (no hardcoded hex; the Focused column shows the `border/focus` ring, Disabled uses `surface/disabled`, the ghost row is Tertiary)
+**Button - every state, bound to tokens** (no hardcoded hex; the Focused column shows the `border/focus` ring, Disabled uses `surface/disabled`, the ghost row is Tertiary)
 
 ![Button states](images/button-states.png)
 
