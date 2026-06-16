@@ -1,6 +1,12 @@
 # Building token-bound components
 
-Once the token tiers exist (Brand → Alias → Mapped → Responsive), components should consume **only Mapped** color tokens and **Responsive**/text-style typography — never raw hex. That's what makes a component inherit Light/Dark theming and stay in sync when a base color changes: every visual property is a `VARIABLE_ALIAS` chain back to Brand.
+Once the token tiers exist (Brand → Alias → Mapped → Typography), components should consume tokens for **every** value — never raw hex, **and never raw numbers** for layout:
+
+- **Colors** → **Mapped** tokens, via `setBoundVariableForPaint` (fills, strokes).
+- **Type** → bound **text styles** / **Typography** vars.
+- **Layout dimensions** → **Alias** `spacing/*` (gap + padding), `radius/*` (corner radius), `stroke/*` (border width), via `node.setBoundVariable(...)`.
+
+That's what makes a component inherit Light/Dark theming and stay in sync when a base color *or the spacing scale* changes: every property is a `VARIABLE_ALIAS` chain back to Brand. A hardcoded `itemSpacing = 8` or `cornerRadius = 8` is just as broken as a hardcoded hex fill — it silently drops out of the system.
 
 This is Phase 3 of the build (tokens are Phase 1–2). Build components **after** tokens, one component at a time, validating with a screenshot.
 
@@ -9,19 +15,35 @@ This is Phase 3 of the build (tokens are Phase 1–2). Build components **after*
 1. **Define variant axes.** A component is a Cartesian product of properties, e.g. Button = `Type` × `State`. Keep the matrix under ~30 variants; if `Size × Type × State` explodes, split or use component properties instead of variants.
 2. **Build one `COMPONENT` per combination**, naming it `"Axis=Value, Axis=Value"` (Figma parses this into variant properties).
 3. **Bind every visual property to a Mapped token** with `setBoundVariableForPaint` (fills, strokes). Transparent = `fills = []`.
+3b. **Bind every layout dimension to an Alias `spacing/`, `radius/` or `stroke/` token** with `node.setBoundVariable(field, variable)` — `itemSpacing`/`counterAxisSpacing`, `paddingLeft|Right|Top|Bottom`, the four `*Radius` fields, and `strokeWeight`. Set a base number first (the variable overrides it), then bind. Never leave a raw layout number on a component.
 4. **`combineAsVariants`** the components into a set, then **grid-layout** them (they stack at 0,0 otherwise).
 5. **Add component properties** — a `TEXT` property for labels, `BOOLEAN` for optional elements, `INSTANCE_SWAP` for icons — and link them to child nodes.
 
 ## Binding helper
 
 ```js
-const mapped = (await figma.variables.getLocalVariableCollectionsAsync()).find(c=>c.name==="Mapped");
-const mvars = {}; (await figma.variables.getLocalVariablesAsync())
-  .filter(v=>v.variableCollectionId===mapped.id).forEach(v=>{mvars[v.name]=v;});
-// setBoundVariableForPaint returns a NEW paint — assign it, don't mutate in place
+const cols = await figma.variables.getLocalVariableCollectionsAsync();
+const mapped = cols.find(c=>c.name==="Mapped");
+const alias  = cols.find(c=>c.name==="Alias");
+const allVars = await figma.variables.getLocalVariablesAsync();
+const mvars = {}; allVars.filter(v=>v.variableCollectionId===mapped.id).forEach(v=>{mvars[v.name]=v;});
+const dvars = {}; allVars.filter(v=>v.variableCollectionId===alias.id).forEach(v=>{dvars[v.name]=v;}); // spacing/ radius/ stroke/ live here
+
+// COLOR: setBoundVariableForPaint returns a NEW paint — assign it, don't mutate in place
 function bp(name){ return figma.variables.setBoundVariableForPaint({type:'SOLID',color:{r:0,g:0,b:0}}, 'color', mvars[name]); }
 // usage: node.fills = [bp('surface/brand')]; node.strokes = [bp('border/focus')];
+
+// DIMENSION: bind a layout field to a spacing/ radius/ stroke/ token
+function bd(node, field, name){ node.setBoundVariable(field, dvars[name]); }
+// gap + padding (one call each):
+function bindPadding(node, token){ for(const f of ['paddingLeft','paddingRight','paddingTop','paddingBottom']) bd(node, f, token); }
+function bindGap(node, token){ bd(node, 'itemSpacing', token); }
+function bindRadius(node, token){ for(const f of ['topLeftRadius','topRightRadius','bottomLeftRadius','bottomRightRadius']) bd(node, f, token); }
+function bindStroke(node, token){ bd(node, 'strokeWeight', token); }
+// usage: bindPadding(card,'spacing/lg'); bindGap(card,'spacing/sm'); bindRadius(card,'radius/lg'); bindStroke(card,'stroke/thin');
 ```
+
+> Padding/radius can differ per side — call `bd(node,'paddingTop','spacing/md')` etc. individually when a component needs asymmetric values. `strokeWeight` binds the whole stroke; per-side stroke fields (`strokeTopWeight`…) also exist if needed.
 
 ## Gotchas that bit during the Button build
 
@@ -38,7 +60,7 @@ function bp(name){ return figma.variables.setBoundVariableForPaint({type:'SOLID'
 
 ```js
 await figma.loadFontAsync({family:'Inter',style:'Medium'});
-// ...build mvars + bp() as above...
+// ...build mvars + dvars + bp()/bd()/bindGap()/bindRadius()/bindStroke() as above...
 const T = {
   Primary: {
     Default:  {fill:"surface/brand",         text:"text/on-brand", border:null,           bw:0},
@@ -71,10 +93,15 @@ for(const type of ["Primary","Secondary","Tertiary"]){
     c.layoutMode='HORIZONTAL';
     c.primaryAxisAlignItems='CENTER'; c.counterAxisAlignItems='CENTER';
     c.primaryAxisSizingMode='AUTO';   c.counterAxisSizingMode='AUTO';   // hug BOTH axes
-    c.paddingTop=10; c.paddingBottom=10; c.paddingLeft=18; c.paddingRight=18;
+    // base numbers (the bound variables override these), then bind every dimension to a token
+    c.paddingTop=8; c.paddingBottom=8; c.paddingLeft=16; c.paddingRight=16;
     c.itemSpacing=8; c.cornerRadius=8;
+    bd(c,'paddingTop','spacing/sm'); bd(c,'paddingBottom','spacing/sm');
+    bd(c,'paddingLeft','spacing/lg'); bd(c,'paddingRight','spacing/lg');
+    bindGap(c,'spacing/sm');
+    bindRadius(c,'radius/md');
     c.fills = s.fill ? [bp(s.fill)] : [];
-    if(s.border){ c.strokes=[bp(s.border)]; c.strokeWeight=s.bw; c.strokeAlign='INSIDE'; } else { c.strokes=[]; }
+    if(s.border){ c.strokes=[bp(s.border)]; c.strokeWeight=s.bw; c.strokeAlign='INSIDE'; bindStroke(c, s.bw>=2?'stroke/thick':'stroke/thin'); } else { c.strokes=[]; }
     const t=figma.createText(); t.fontName={family:'Inter',style:'Medium'}; t.fontSize=14; t.characters='Button';
     t.fills=[bp(s.text)]; c.appendChild(t);
     comps.push(c);
@@ -93,7 +120,7 @@ return { setId:set.id };
 
 ## Typography in components
 
-For text-heavy components, apply the bound **text styles** (Hero, H1–H6, Paragraph…) instead of hardcoding size/line-height — they already reference the Responsive vars, so the text becomes responsive (Desktop/Mobile) and font changes propagate. Apply a style: `textNode.setTextStyleIdAsync(style.id)` after loading the style's font.
+For text-heavy components, apply the bound **text styles** (Hero, H1–H6, Paragraph…) instead of hardcoding size/line-height — they already reference the Typography vars, so the text becomes responsive (Desktop/Mobile) and font changes propagate. Apply a style: `textNode.setTextStyleIdAsync(style.id)` after loading the style's font.
 
 ## Suggested component order (atoms → molecules)
 

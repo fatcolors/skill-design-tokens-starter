@@ -9,9 +9,9 @@ The model behind this skill is a three-tier color system plus a responsive type 
 - **Naming:** `Group/Step`, e.g. `Violet/600`, `Gray/50`. Group = hue name; step = position on the scale.
 - **Scale:** a numeric ramp where lower = lighter, higher = darker. Common ramps: `50,100,200…900,950` (Tailwind/Untitled-UI style) or `100…1200` with `50`/`25` intermediates. **Match the source palette's own steps and names** rather than imposing a different scale.
 - **Foundations:** keep `White`/`Black` in their own group (e.g. `Base/White`, `Base/Black`).
-- **Fonts:** font family and weight live here as STRING variables (`font-family/heading`, `font-family/body`, `font-weight/regular|medium|semibold|bold`). They get pulled into Alias only for multi-brand systems.
+- **Fonts:** font family and weight do **not** live here. They sit in the **Typography** collection alongside the type scale (see below) so every type token — sizes *and* fonts — is in one place.
 - **Modes:** one mode. (Multi-brand systems can use modes here, but that's rare.)
-- **Scopes:** once the Alias tier exists, hide colors from the picker with `scopes = []`. Font strings keep functional scopes (`FONT_FAMILY` / `FONT_STYLE`) so they remain usable.
+- **Scopes:** once the Alias tier exists, hide colors from the picker with `scopes = []`.
 
 ## Tier 2 — Alias (semantic)
 
@@ -54,30 +54,34 @@ This set was validated end-to-end; use it as a starting point and trim/extend pe
 
 Light/Dark patterning that reads well: surfaces invert (white ↔ near-black, neutral/50 ↔ neutral/900); text inverts (neutral/900 ↔ neutral/50); brand surface uses a slightly lighter step in dark (primary/600 → primary/500); status fills use the subtle end in light and the deep end in dark (e.g. error/50 ↔ error/950); status text/icons use 600–700 in light and 300–400 in dark; borders neutral/200 ↔ neutral/700.
 
-## Responsive (typography)
+## Typography (type scale + fonts)
 
-**Purpose:** type that adapts across breakpoints. `FLOAT` variables, two modes: `Desktop` + `Mobile`.
+**Purpose:** all type tokens in **one** collection, with two modes — `Desktop` + `Mobile`. This is a deliberate choice: keeping font sizes and font family/weight together means a designer finds everything type-related in one place, instead of size in one collection and family in another. Modes belong to the collection, so the size/line-height vars (which *do* change per breakpoint) and the family/weight vars (which *don't*) share the same Desktop/Mobile mode pair.
 
-- **Per style:** `font-size/<style>`, `line-height/<style>`, `paragraph-spacing/<style>`.
+- **Type scale — `FLOAT` vars, per style:** `font-size/<style>`, `line-height/<style>`, `paragraph-spacing/<style>`. Scopes `["FONT_SIZE"]` / `["LINE_HEIGHT"]` / `["PARAGRAPH_SPACING"]`. These hold different values per mode (smaller on Mobile).
+- **Fonts — `STRING` vars:** `font-family/heading`, `font-family/body`, `font-weight/regular|medium|semibold|bold`. Scopes `["FONT_FAMILY"]` / `["FONT_STYLE"]`. Family/weight are breakpoint-invariant, so set the **same value in both Desktop and Mobile modes** (when you change a font, change it in both modes or they drift).
 - **Styles:** `hero`, `h1`–`h6`, `paragraph-lg`, `paragraph-md`, `paragraph-sm`, `caption`.
 - **Accessibility:** keep body (`paragraph-md`) at **16px in both modes**; anything below 16 needs care. Headings scale down on mobile; body usually stays.
-- **Scopes:** `["FONT_SIZE"]` / `["LINE_HEIGHT"]` / `["PARAGRAPH_SPACING"]`.
+
+> Older builds split this across **Brand** (font family/weight) + **Responsive** (sizes). That's also valid (no duplicated family/weight), but most people prefer one consolidated collection — that's the default here. If a user wants the split, put the STRING font vars in Brand (single mode) and the FLOAT type vars in a `Responsive` collection (Desktop/Mobile).
 
 ### Text styles
 
-Create Figma text styles (Hero, H1–H6, Paragraph Large/Medium/Small, Caption) and **bind** each to the Responsive vars (`fontSize`, `lineHeight`, `paragraphSpacing`) plus the Brand font vars (`fontFamily`, `fontStyle`). Applying one style then yields type that is both themeable and responsive (switch the node's Responsive mode → Desktop/Mobile).
+Create Figma text styles (Hero, H1–H6, Paragraph Large/Medium/Small, Caption) and **bind** each to the Typography vars — `fontSize`, `lineHeight`, `paragraphSpacing` (FLOAT) plus `fontFamily`, `fontStyle` (STRING). Applying one style then yields type that is both themeable and responsive (switch the node's Typography mode → Desktop/Mobile).
 
-## Dimensions (spacing, radius, stroke)
+## Scale (spacing, radius, stroke)
 
-Numeric, **mode-invariant** layout tokens — they don't change with theme, so they live in **Alias**, not Mapped (a Light/Dark collection would store identical values twice and wrongly imply they vary by theme). They alias to a raw dimension scale in Brand, mirroring how color roles alias to color scales.
+Numeric, **mode-invariant** layout tokens — they don't change with theme, so they live in **Alias**, not Mapped (a Light/Dark collection would store identical values twice and wrongly imply they vary by theme). They alias to a raw **Scale** in Brand, mirroring how color roles alias to color scales.
 
-- **Brand** holds the raw scale as hidden FLOAT primitives: `Dimension/0 … Dimension/512` plus `Dimension/full` (a large value like 9999 for pills/circles). A 4pt-based ramp, e.g. 0,1,2,4,8,12,16,20,24,32,40,48,64… with `scopes = []`.
+- **Brand** holds the raw scale as hidden FLOAT primitives: `Scale/0 … Scale/512` plus `Scale/full` (a large value like 9999 for pills/circles). A 4pt-based ramp, e.g. 0,1,2,4,8,12,16,20,24,32,40,48,64… with `scopes = []`.
 - **Alias** holds the semantic, consumable tokens, each scoped to a single property so it only appears where valid:
   - `spacing/*` → scope `GAP` (covers auto-layout **gap and padding**): none, xxs, xs, sm, md, lg, xl, 2xl, 3xl, 4xl, 5xl.
   - `radius/*` → scope `CORNER_RADIUS` (trimmed — radius needs few steps): none, xs, sm, md, lg, xl, 2xl, **full**.
   - `stroke/*` → scope `STROKE_FLOAT` (border width): none, thin (1), thick (2), thicker (4).
 
 Components consume these directly from Alias. The "components consume Mapped only" rule is a *color/theming* rule; dimensions aren't themed, so don't route them through Mapped.
+
+**Components MUST bind these, not type raw numbers.** Every auto-layout gap, padding, corner radius and stroke width on a component must be a bound `spacing/*`, `radius/*` or `stroke/*` token via `node.setBoundVariable(...)` — see [components.md](components.md). A component with `itemSpacing = 8` hardcoded is broken the same way a hardcoded hex fill is: it won't update when the scale changes and it isn't really "in the system."
 
 ## Scope quick-reference
 
@@ -94,7 +98,7 @@ Components consume these directly from Alias. The "components consume Mapped onl
 | spacing / gap / padding | `["GAP"]` |
 | corner radius | `["CORNER_RADIUS"]` |
 | border width (stroke) | `["STROKE_FLOAT"]` |
-| dimension primitive, hidden | `[]` |
+| scale primitive, hidden | `[]` |
 
 ## 2-tier variant
 

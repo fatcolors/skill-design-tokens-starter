@@ -106,7 +106,9 @@ for(const n of Object.keys(surface)) mk(n, surface[n][0], surface[n][1], ["FRAME
 return { collectionId: mapped.id, lightModeId, darkModeId };
 ```
 
-## Step 4 — Responsive (Desktop/Mobile, FLOAT)
+## Step 4 — Typography (Desktop/Mobile): type scale FLOATs **and** font STRINGs in one collection
+
+One `Typography` collection holds both the per-breakpoint type scale (FLOAT) and the font family/weight (STRING). Sizes get different Desktop/Mobile values; family/weight get the **same value in both modes**.
 
 ```js
 const STYLES = ["hero","h1","h2","h3","h4","h5","h6","paragraph-lg","paragraph-md","paragraph-sm","caption"];
@@ -114,9 +116,11 @@ const SIZE = { hero:[64,40], h1:[48,32], "paragraph-md":[16,16] /* ...[desktop,m
 const LH   = { hero:[72,48], h1:[56,40], "paragraph-md":[24,24] /* ... */ };
 const PS   = { hero:[24,16], h1:[20,16], "paragraph-md":[16,16] /* ... */ };
 
-const coll = figma.variables.createVariableCollection("Responsive");
+const coll = figma.variables.createVariableCollection("Typography");
 const desktop = coll.modes[0].modeId; coll.renameMode(desktop, "Desktop");
 const mobile  = coll.addMode("Mobile");
+
+// Type scale — different value per mode
 function mkFloat(name, d, m, scope){
   const v=figma.variables.createVariable(name, coll, "FLOAT");
   v.scopes=[scope];
@@ -128,29 +132,45 @@ for(const s of STYLES){
   mkFloat(`line-height/${s}`, LH[s][0], LH[s][1], "LINE_HEIGHT");
   mkFloat(`paragraph-spacing/${s}`, PS[s][0], PS[s][1], "PARAGRAPH_SPACING");
 }
+
+// Fonts — STRING, same value in BOTH modes (breakpoint-invariant)
+function mkString(name, val, scope){
+  const v=figma.variables.createVariable(name, coll, "STRING");
+  v.scopes=[scope];
+  v.setValueForMode(desktop, val);
+  v.setValueForMode(mobile, val);
+}
+for(const [n,val,sc] of [
+  ["font-family/heading","Inter","FONT_FAMILY"], ["font-family/body","Inter","FONT_FAMILY"],
+  ["font-weight/regular","Regular","FONT_STYLE"], ["font-weight/medium","Medium","FONT_STYLE"],
+  ["font-weight/semibold","Semi Bold","FONT_STYLE"], ["font-weight/bold","Bold","FONT_STYLE"]
+]) mkString(n, val, sc);
+
 return { collectionId: coll.id, desktop, mobile };
 ```
 
-## Step 4b — Dimension scale (spacing / radius / stroke)
+> **Split variant:** if the user prefers the older two-collection layout, create the FLOAT vars in a `Responsive` collection and the STRING font vars in `Brand` (single mode) instead — same code, different `createVariable` target collection.
 
-Raw scale as hidden FLOAT primitives in **Brand**; semantic tokens in **Alias** (mode-invariant → not Mapped), each scoped to one property.
+## Step 4b — Scale (spacing / radius / stroke)
+
+Raw scale as hidden FLOAT primitives named `Scale/*` in **Brand**; semantic tokens in **Alias** (mode-invariant → not Mapped), each scoped to one property.
 
 ```js
-// Brand: raw 4pt scale (hidden)
+// Brand: raw 4pt Scale (hidden)
 const brand = (await figma.variables.getLocalVariableCollectionsAsync()).find(c=>c.name==="Brand");
 const bmode = brand.modes[0].modeId;
 const SCALE=[0,1,2,4,8,12,14,16,18,20,24,28,30,32,36,38,40,44,48,56,60,64,72,90,96,128,256,512];
-for(const n of SCALE){ const v=figma.variables.createVariable(`Dimension/${n}`, brand, "FLOAT"); v.scopes=[]; v.setValueForMode(bmode, n); }
-{ const v=figma.variables.createVariable("Dimension/full", brand, "FLOAT"); v.scopes=[]; v.setValueForMode(bmode, 9999); }
+for(const n of SCALE){ const v=figma.variables.createVariable(`Scale/${n}`, brand, "FLOAT"); v.scopes=[]; v.setValueForMode(bmode, n); }
+{ const v=figma.variables.createVariable("Scale/full", brand, "FLOAT"); v.scopes=[]; v.setValueForMode(bmode, 9999); }
 ```
 
 ```js
-// Alias: semantic, scoped, aliased to Brand Dimension
+// Alias: semantic, scoped, aliased to Brand Scale
 const cols=await figma.variables.getLocalVariableCollectionsAsync();
 const alias=cols.find(c=>c.name==="Alias"), brand=cols.find(c=>c.name==="Brand");
 const dim={}; (await figma.variables.getLocalVariablesAsync()).filter(v=>v.variableCollectionId===brand.id).forEach(v=>{dim[v.name]=v.id;});
 const m=alias.modes[0].modeId;
-function da(name, key, scope){ const v=figma.variables.createVariable(name, alias, "FLOAT"); v.scopes=[scope]; v.setValueForMode(m,{type:"VARIABLE_ALIAS",id:dim[`Dimension/${key}`]}); }
+function da(name, key, scope){ const v=figma.variables.createVariable(name, alias, "FLOAT"); v.scopes=[scope]; v.setValueForMode(m,{type:"VARIABLE_ALIAS",id:dim[`Scale/${key}`]}); }
 const spacing={none:0,xxs:2,xs:4,sm:8,md:12,lg:16,xl:24,"2xl":32,"3xl":40,"4xl":48,"5xl":64};
 for(const k of Object.keys(spacing)) da(`spacing/${k}`, spacing[k], "GAP");
 const radius={none:0,xs:2,sm:4,md:8,lg:12,xl:16,"2xl":24,full:"full"};
@@ -159,29 +179,17 @@ const stroke={none:0,thin:1,thick:2,thicker:4};
 for(const k of Object.keys(stroke)) da(`stroke/${k}`, stroke[k], "STROKE_FLOAT");
 ```
 
-## Step 5 — Font vars (Brand) + bound text styles
+## Step 5 — Bound text styles
 
-Font vars (STRING) go in Brand:
-
-```js
-const brand = (await figma.variables.getLocalVariableCollectionsAsync()).find(c=>c.name==="Brand");
-const bmode = brand.modes[0].modeId;
-for(const [n,val,sc] of [
-  ["font-family/heading","Inter","FONT_FAMILY"], ["font-family/body","Inter","FONT_FAMILY"],
-  ["font-weight/regular","Regular","FONT_STYLE"], ["font-weight/semibold","Semi Bold","FONT_STYLE"]
-]){ const v=figma.variables.createVariable(n, brand, "STRING"); v.scopes=[sc]; v.setValueForMode(bmode, val); }
-```
-
-Text styles — load the font first; bind with the variable **object**. Note Inter's weight string is `"Semi Bold"` (with a space), not `"SemiBold"`.
+Font vars already exist in the **Typography** collection (created in Step 4). Now create Figma text styles and bind all five fields to Typography vars. Load the font first; bind with the variable **object**. Note Inter's weight string is `"Semi Bold"` (with a space), not `"SemiBold"`.
 
 ```js
 await figma.loadFontAsync({family:'Inter',style:'Semi Bold'});
 const cols = await figma.variables.getLocalVariableCollectionsAsync();
-const resp = cols.find(c=>c.name==="Responsive"); const brand = cols.find(c=>c.name==="Brand");
-const dM = resp.modes.find(m=>m.name==='Desktop').modeId;
+const typo = cols.find(c=>c.name==="Typography");
+const dM = typo.modes.find(m=>m.name==='Desktop').modeId;
 const all = await figma.variables.getLocalVariablesAsync();
-const r={}; all.filter(v=>v.variableCollectionId===resp.id).forEach(v=>{r[v.name]=v;});
-const b={}; all.filter(v=>v.variableCollectionId===brand.id).forEach(v=>{b[v.name]=v;});
+const t={}; all.filter(v=>v.variableCollectionId===typo.id).forEach(v=>{t[v.name]=v;});
 const existing = new Set((await figma.getLocalTextStylesAsync()).map(s=>s.name));
 
 for(const [name,key] of [["H1","h1"],["H2","h2"]]){ // headings: Semi Bold + heading family
@@ -189,16 +197,16 @@ for(const [name,key] of [["H1","h1"],["H2","h2"]]){ // headings: Semi Bold + hea
   const ts=figma.createTextStyle();
   ts.name=name;
   ts.fontName={family:'Inter',style:'Semi Bold'};
-  ts.fontSize=r[`font-size/${key}`].valuesByMode[dM];                 // base value (variable overrides)
-  ts.lineHeight={unit:'PIXELS', value:r[`line-height/${key}`].valuesByMode[dM]};
-  ts.paragraphSpacing=r[`paragraph-spacing/${key}`].valuesByMode[dM];
-  ts.setBoundVariable('fontSize', r[`font-size/${key}`]);
-  ts.setBoundVariable('lineHeight', r[`line-height/${key}`]);
-  ts.setBoundVariable('paragraphSpacing', r[`paragraph-spacing/${key}`]);
-  ts.setBoundVariable('fontFamily', b['font-family/heading']);
-  ts.setBoundVariable('fontStyle', b['font-weight/semibold']);
+  ts.fontSize=t[`font-size/${key}`].valuesByMode[dM];                 // base value (variable overrides)
+  ts.lineHeight={unit:'PIXELS', value:t[`line-height/${key}`].valuesByMode[dM]};
+  ts.paragraphSpacing=t[`paragraph-spacing/${key}`].valuesByMode[dM];
+  ts.setBoundVariable('fontSize', t[`font-size/${key}`]);
+  ts.setBoundVariable('lineHeight', t[`line-height/${key}`]);
+  ts.setBoundVariable('paragraphSpacing', t[`paragraph-spacing/${key}`]);
+  ts.setBoundVariable('fontFamily', t['font-family/heading']);
+  ts.setBoundVariable('fontStyle', t['font-weight/semibold']);
 }
-// body styles: load Inter Regular, bind font-family/body + font-weight/regular
+// body styles: load Inter Regular, bind font-family/body + font-weight/regular (all from Typography)
 ```
 
 ## Step 6 — Hide primitives

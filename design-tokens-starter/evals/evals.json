@@ -16,7 +16,13 @@
     {
       "id": 3,
       "prompt": "Set up a responsive typography system as Figma variables in https://www.figma.com/design/EXAMPLEKEY/Type — font sizes, line heights and paragraph spacing for hero, h1-h6 and body/caption, that change between desktop and mobile. And make text styles I can actually apply, bound to those variables. Keep body at 16px on mobile.",
-      "expected_output": "A Responsive collection (Desktop/Mobile modes) of FLOAT vars for font-size/line-height/paragraph-spacing across the type scale, body=16 on mobile, plus bound Figma text styles (Hero, H1-H6, Paragraph L/M/S, Caption).",
+      "expected_output": "A single Typography collection (Desktop/Mobile modes) holding FLOAT vars for font-size/line-height/paragraph-spacing across the type scale (body=16 on mobile) AND the STRING font-family/font-weight vars (same value in both modes), plus bound Figma text styles (Hero, H1-H6, Paragraph L/M/S, Caption) bound to those Typography vars.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "My file already has the token system (Brand/Alias/Mapped/Typography + a Scale and spacing/radius/stroke tokens). Build me a Card component in https://www.figma.com/design/EXAMPLEKEY/DS with the usual states.",
+      "expected_output": "A Card component/variant set where EVERY color is a bound Mapped token AND every layout dimension is bound to an Alias token — itemSpacing/padding to spacing/*, corner radii to radius/*, stroke width to stroke/* via node.setBoundVariable. No raw hex and no raw layout numbers (e.g. not a bare itemSpacing=8 or cornerRadius=8). Text uses bound text styles.",
       "files": []
     }
   ]

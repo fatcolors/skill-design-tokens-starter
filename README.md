@@ -16,7 +16,7 @@ Real output from the skill in a Figma file:
 
 ![Light and dark card](images/light-dark-card.png)
 
-**Type scale — bound text styles** (Hero → Caption, each style bound to the Responsive `font-size` / `line-height` variables)
+**Type scale — bound text styles** (Hero → Caption, each style bound to the Typography `font-size` / `line-height` variables)
 
 ![Type scale](images/type-scale.png)
 
@@ -27,19 +27,19 @@ Real output from the skill in a Figma file:
 Running the skill produces a real, fully-wired token system in your Figma file:
 
 ```
-Brand (primitives)      Alias (semantic)          Mapped (component)         Responsive (type)
+Brand (primitives)      Alias (semantic)          Mapped (component)         Typography (type)
 raw hex scales     →    role → Brand         →    intent+state → Alias  →    font-size / line-height /
-50–950, by hue          primary / secondary /     surface / text /           paragraph-spacing
+50–950, by hue          primary / secondary /     surface / text /           paragraph-spacing + fonts
 (e.g. Violet/600)       success / error / …       icon / border              × Desktop / Mobile modes
-                        (aliased to Brand)        × Light / Dark modes        feeds bound text styles
++ Scale/* primitives    + spacing/radius/stroke   × Light / Dark modes        feeds bound text styles
 ```
 
-- **Brand** — your raw color scales, one variable per hue/step, plus `font-family` / `font-weight`.
-- **Alias** — semantic roles (`primary`, `secondary`, `info`, `success`, `warning`, `error`, `accent`…), each aliased to a Brand scale.
+- **Brand** — your raw color scales, one variable per hue/step, plus the hidden `Scale/*` dimension primitives (4pt ramp).
+- **Alias** — semantic roles (`primary`, `secondary`, `info`, `success`, `warning`, `error`, `accent`…) aliased to Brand scales, plus the semantic layout tokens `spacing/*`, `radius/*`, `stroke/*`.
 - **Mapped** — the tokens components actually use: `surface/*`, `text/*`, `icon/*`, `border/*`, with **Light and Dark** values in one collection.
-- **Responsive** — a numeric type scale (`font-size`/`line-height`/`paragraph-spacing`) across **Desktop and Mobile**, with body locked at 16px for accessibility.
-- **Text styles** — Hero, H1–H6, Paragraph L/M/S, Caption — bound to the Responsive variables.
-- **Components** — token-bound components (Button with all states, Input, Card…) whose every fill, border, and label color references a Mapped token.
+- **Typography** — one collection holding the numeric type scale (`font-size`/`line-height`/`paragraph-spacing`, body locked at 16px) **and** the `font-family`/`font-weight` strings, across **Desktop and Mobile** modes.
+- **Text styles** — Hero, H1–H6, Paragraph L/M/S, Caption — bound to the Typography variables.
+- **Components** — token-bound components (Button with all states, Input, Card…) whose every fill, border, and label color references a Mapped token, and whose every gap, padding, corner radius and stroke width is bound to a `spacing`/`radius`/`stroke` token — so they re-theme *and* re-scale automatically.
 
 Because everything is connected through `Mapped → Alias → Brand`, **changing one base color updates the entire system**, and flipping a frame's mode to Dark re-themes every component automatically.
 
@@ -101,10 +101,10 @@ You pick the accent and role mapping — don't ask me a bunch of questions.
 **Or point it at scales you already have in Figma:**
 ```
 I have my raw color scales on a frame in this Figma file <URL>. Read them and turn them into a
-proper Brand → Alias → Mapped (light/dark) → Responsive token system.
+proper Brand → Alias → Mapped (light/dark) → Typography token system.
 ```
 
-The skill will inspect the file, then build Brand → Alias → Mapped → Responsive, create the bound text styles, hide the primitives from the picker, and (optionally) drop a Light/Dark demo card so you can see it working.
+The skill will inspect the file, then build Brand → Alias → Mapped → Typography, create the bound text styles, hide the primitives from the picker, and (optionally) drop a Light/Dark demo card so you can see it working.
 
 ---
 
@@ -164,7 +164,7 @@ design-tokens-starter/
 
 ## How it works (under the hood)
 
-The skill follows a strict, validated order — inspect the file → Brand → Alias (aliased to Brand) → Mapped (Light/Dark, aliased to Alias) → Responsive (Desktop/Mobile) → text styles → hide primitives → components. It works incrementally (small, sequential Plugin-API calls), validates each tier by resolving the full reference chain, and returns IDs so later steps stay connected. The methodology is inspired by the three-tier "brand / alias / mapped" approach popularized by the design-systems community.
+The skill follows a strict, validated order — inspect the file → Brand → Alias (aliased to Brand) → Mapped (Light/Dark, aliased to Alias) → Typography (Desktop/Mobile, type scale + fonts) → text styles → hide primitives → components (every color, gap, padding, radius and stroke bound to a token). It works incrementally (small, sequential Plugin-API calls), validates each tier by resolving the full reference chain, and returns IDs so later steps stay connected. The methodology is inspired by the three-tier "brand / alias / mapped" approach popularized by the design-systems community.
 
 ---
 
