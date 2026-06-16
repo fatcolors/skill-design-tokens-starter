@@ -62,7 +62,7 @@ Pick whichever you prefer.
 
 ### Option A — the packaged `.skill` file (easiest)
 
-Download **[`design-tokens-starter.skill`](design-tokens-starter.skill)** from this repo and install it in the Claude app (**Settings → Capabilities / Skills → add a skill**). A `.skill` file is just a zip — if your client has no import button, rename it to `.zip` and unzip it into your skills folder (see Option B for the location). Then start a new session.
+Download **[`design-tokens-starter.skill`](https://github.com/fatcolors/skill-design-tokens-starter/releases/latest/download/design-tokens-starter.skill)** from the [latest release](https://github.com/fatcolors/skill-design-tokens-starter/releases/latest) and install it in the Claude app (**Settings → Capabilities / Skills → add a skill**). A `.skill` file is just a zip — if your client has no import button, rename it to `.zip` and unzip it into your skills folder (see Option B for the location). Then start a new session.
 
 ### Option B — copy the folder manually
 
