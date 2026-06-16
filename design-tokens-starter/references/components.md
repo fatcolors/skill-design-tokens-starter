@@ -3,10 +3,10 @@
 Once the token tiers exist (Brand → Alias → Mapped → Typography), components should consume tokens for **every** value — never raw hex, **and never raw numbers** for layout:
 
 - **Colors** → **Mapped** tokens, via `setBoundVariableForPaint` (fills, strokes).
-- **Type** → bound **text styles** / **Typography** vars.
+- **Type** → bound **text styles** applied with `await textNode.setTextStyleIdAsync(style.id)` (the styles are themselves bound to **Typography** vars). **Mandatory — never leave a raw `fontSize`/`fontName` on a component's text.**
 - **Layout dimensions** → **Alias** `spacing/*` (gap + padding), `radius/*` (corner radius), `stroke/*` (border width), via `node.setBoundVariable(...)`.
 
-That's what makes a component inherit Light/Dark theming and stay in sync when a base color *or the spacing scale* changes: every property is a `VARIABLE_ALIAS` chain back to Brand. A hardcoded `itemSpacing = 8` or `cornerRadius = 8` is just as broken as a hardcoded hex fill — it silently drops out of the system.
+That's what makes a component inherit Light/Dark theming and stay in sync when a base color, *the spacing scale, or the type scale* changes: every property is a `VARIABLE_ALIAS` chain back to Brand/Typography. A hardcoded `itemSpacing = 8`, `cornerRadius = 8`, **or `fontSize = 14`** is just as broken as a hardcoded hex fill — it silently drops out of the system.
 
 This is Phase 3 of the build (tokens are Phase 1–2). Build components **after** tokens, one component at a time, validating with a screenshot.
 
@@ -16,6 +16,7 @@ This is Phase 3 of the build (tokens are Phase 1–2). Build components **after*
 2. **Build one `COMPONENT` per combination**, naming it `"Axis=Value, Axis=Value"` (Figma parses this into variant properties).
 3. **Bind every visual property to a Mapped token** with `setBoundVariableForPaint` (fills, strokes). Transparent = `fills = []`.
 3b. **Bind every layout dimension to an Alias `spacing/`, `radius/` or `stroke/` token** with `node.setBoundVariable(field, variable)` — `itemSpacing`/`counterAxisSpacing`, `paddingLeft|Right|Top|Bottom`, the four `*Radius` fields, and `strokeWeight`. Set a base number first (the variable overrides it), then bind. Never leave a raw layout number on a component.
+3c. **Apply a bound text style to every TEXT node** with `await textNode.setTextStyleIdAsync(style.id)` — load the style's font first (`await figma.loadFontAsync(style.fontName)`). Pick the style matching the role (`Paragraph Small`/`Caption` for chips/badges, `Paragraph Medium` for body, `H4`–`H6` for headings). Never leave a raw `fontSize`/`fontName`. If the needed weight has no style yet (e.g. a Medium label), create the bound style first — don't hardcode. (`setTextStyleIdAsync` only sets the style's size/weight/line-height/family; the text's *color* is still a separate Mapped fill from step 3, so set both.)
 4. **`combineAsVariants`** the components into a set, then **grid-layout** them (they stack at 0,0 otherwise).
 5. **Add component properties** — a `TEXT` property for labels, `BOOLEAN` for optional elements, `INSTANCE_SWAP` for icons — and link them to child nodes.
 
@@ -59,7 +60,11 @@ function bindStroke(node, token){ bd(node, 'strokeWeight', token); }
 `Type` (Primary/Secondary/Tertiary) × `State` (Default/Hover/Pressed/Focused/Disabled), every color a Mapped token:
 
 ```js
-await figma.loadFontAsync({family:'Inter',style:'Medium'});
+// Resolve the bound text style for the label, and load its font before applying.
+// (No Medium style in the default ramp — use Paragraph Small, or create a "Label" Medium style first.)
+const styles = await figma.getLocalTextStylesAsync();
+const labelStyle = styles.find(s=>s.name==='Paragraph Small');
+await figma.loadFontAsync(labelStyle.fontName);
 // ...build mvars + dvars + bp()/bd()/bindGap()/bindRadius()/bindStroke() as above...
 const T = {
   Primary: {
@@ -102,8 +107,10 @@ for(const type of ["Primary","Secondary","Tertiary"]){
     bindRadius(c,'radius/md');
     c.fills = s.fill ? [bp(s.fill)] : [];
     if(s.border){ c.strokes=[bp(s.border)]; c.strokeWeight=s.bw; c.strokeAlign='INSIDE'; bindStroke(c, s.bw>=2?'stroke/thick':'stroke/thin'); } else { c.strokes=[]; }
-    const t=figma.createText(); t.fontName={family:'Inter',style:'Medium'}; t.fontSize=14; t.characters='Button';
-    t.fills=[bp(s.text)]; c.appendChild(t);
+    const t=figma.createText(); t.characters='Button';
+    t.fills=[bp(s.text)];                       // color: Mapped token
+    await t.setTextStyleIdAsync(labelStyle.id); // size/weight/line-height: bound text style (NOT a raw fontSize)
+    c.appendChild(t);
     comps.push(c);
   }
 }
@@ -120,7 +127,17 @@ return { setId:set.id };
 
 ## Typography in components
 
-For text-heavy components, apply the bound **text styles** (Hero, H1–H6, Paragraph…) instead of hardcoding size/line-height — they already reference the Typography vars, so the text becomes responsive (Desktop/Mobile) and font changes propagate. Apply a style: `textNode.setTextStyleIdAsync(style.id)` after loading the style's font.
+**Every** TEXT node in a component must carry a bound **text style** (Hero, H1–H6, Paragraph L/M/S, Caption) — not just text-heavy ones. The styles already reference the Typography vars, so applying one makes the text responsive (Desktop/Mobile) and lets font/size changes propagate; a hardcoded `fontSize`/`fontName` silently drops out of that system, exactly like a raw `itemSpacing`.
+
+```js
+const styles = await figma.getLocalTextStylesAsync();
+const style = styles.find(s=>s.name==='Paragraph Small');   // role-matched
+await figma.loadFontAsync(style.fontName);                  // load BEFORE applying
+await textNode.setTextStyleIdAsync(style.id);               // size/weight/line-height/family — all bound
+textNode.fills=[bp('text/primary')];                        // color is still a separate Mapped fill — set both
+```
+
+Role guide: `Caption` (12) / `Paragraph Small` (14) for chips, badges, helper text; `Paragraph Medium` (16) for body and inputs; `H4`–`H6` for card/section titles; `H1`–`Hero` for page headers. **Gotcha:** the default ramp ships only Regular and Semi Bold weights — if a component needs a Medium label, create a bound "Label" text style (Medium) first rather than hardcoding `fontName`. `setTextStyleIdAsync` is async and must be `await`ed, and the style's font must be loaded first or it throws `unloaded font`.
 
 ## Suggested component order (atoms → molecules)
 

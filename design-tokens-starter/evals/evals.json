@@ -22,7 +22,7 @@
     {
       "id": 4,
       "prompt": "My file already has the token system (Brand/Alias/Mapped/Typography + a Scale and spacing/radius/stroke tokens). Build me a Card component in https://www.figma.com/design/EXAMPLEKEY/DS with the usual states.",
-      "expected_output": "A Card component/variant set where EVERY color is a bound Mapped token AND every layout dimension is bound to an Alias token — itemSpacing/padding to spacing/*, corner radii to radius/*, stroke width to stroke/* via node.setBoundVariable. No raw hex and no raw layout numbers (e.g. not a bare itemSpacing=8 or cornerRadius=8). Text uses bound text styles.",
+      "expected_output": "A Card component/variant set where EVERY color is a bound Mapped token, every layout dimension is bound to an Alias token (itemSpacing/padding to spacing/*, corner radii to radius/*, stroke width to stroke/* via node.setBoundVariable), AND every TEXT node has a bound text style applied via setTextStyleIdAsync (role-matched, e.g. H4-H6 for title, Paragraph for body, Caption for meta). No raw hex, no raw layout numbers (not a bare itemSpacing=8 or cornerRadius=8), and no raw fontSize/fontName on any text node.",
       "files": []
     }
   ]
