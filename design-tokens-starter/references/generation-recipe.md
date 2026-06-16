@@ -131,6 +131,34 @@ for(const s of STYLES){
 return { collectionId: coll.id, desktop, mobile };
 ```
 
+## Step 4b — Dimension scale (spacing / radius / stroke)
+
+Raw scale as hidden FLOAT primitives in **Brand**; semantic tokens in **Alias** (mode-invariant → not Mapped), each scoped to one property.
+
+```js
+// Brand: raw 4pt scale (hidden)
+const brand = (await figma.variables.getLocalVariableCollectionsAsync()).find(c=>c.name==="Brand");
+const bmode = brand.modes[0].modeId;
+const SCALE=[0,1,2,4,8,12,14,16,18,20,24,28,30,32,36,38,40,44,48,56,60,64,72,90,96,128,256,512];
+for(const n of SCALE){ const v=figma.variables.createVariable(`Dimension/${n}`, brand, "FLOAT"); v.scopes=[]; v.setValueForMode(bmode, n); }
+{ const v=figma.variables.createVariable("Dimension/full", brand, "FLOAT"); v.scopes=[]; v.setValueForMode(bmode, 9999); }
+```
+
+```js
+// Alias: semantic, scoped, aliased to Brand Dimension
+const cols=await figma.variables.getLocalVariableCollectionsAsync();
+const alias=cols.find(c=>c.name==="Alias"), brand=cols.find(c=>c.name==="Brand");
+const dim={}; (await figma.variables.getLocalVariablesAsync()).filter(v=>v.variableCollectionId===brand.id).forEach(v=>{dim[v.name]=v.id;});
+const m=alias.modes[0].modeId;
+function da(name, key, scope){ const v=figma.variables.createVariable(name, alias, "FLOAT"); v.scopes=[scope]; v.setValueForMode(m,{type:"VARIABLE_ALIAS",id:dim[`Dimension/${key}`]}); }
+const spacing={none:0,xxs:2,xs:4,sm:8,md:12,lg:16,xl:24,"2xl":32,"3xl":40,"4xl":48,"5xl":64};
+for(const k of Object.keys(spacing)) da(`spacing/${k}`, spacing[k], "GAP");
+const radius={none:0,xs:2,sm:4,md:8,lg:12,xl:16,"2xl":24,full:"full"};
+for(const k of Object.keys(radius)) da(`radius/${k}`, radius[k], "CORNER_RADIUS");
+const stroke={none:0,thin:1,thick:2,thicker:4};
+for(const k of Object.keys(stroke)) da(`stroke/${k}`, stroke[k], "STROKE_FLOAT");
+```
+
 ## Step 5 — Font vars (Brand) + bound text styles
 
 Font vars (STRING) go in Brand:

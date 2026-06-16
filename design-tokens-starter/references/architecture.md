@@ -67,6 +67,18 @@ Light/Dark patterning that reads well: surfaces invert (white ↔ near-black, ne
 
 Create Figma text styles (Hero, H1–H6, Paragraph Large/Medium/Small, Caption) and **bind** each to the Responsive vars (`fontSize`, `lineHeight`, `paragraphSpacing`) plus the Brand font vars (`fontFamily`, `fontStyle`). Applying one style then yields type that is both themeable and responsive (switch the node's Responsive mode → Desktop/Mobile).
 
+## Dimensions (spacing, radius, stroke)
+
+Numeric, **mode-invariant** layout tokens — they don't change with theme, so they live in **Alias**, not Mapped (a Light/Dark collection would store identical values twice and wrongly imply they vary by theme). They alias to a raw dimension scale in Brand, mirroring how color roles alias to color scales.
+
+- **Brand** holds the raw scale as hidden FLOAT primitives: `Dimension/0 … Dimension/512` plus `Dimension/full` (a large value like 9999 for pills/circles). A 4pt-based ramp, e.g. 0,1,2,4,8,12,16,20,24,32,40,48,64… with `scopes = []`.
+- **Alias** holds the semantic, consumable tokens, each scoped to a single property so it only appears where valid:
+  - `spacing/*` → scope `GAP` (covers auto-layout **gap and padding**): none, xxs, xs, sm, md, lg, xl, 2xl, 3xl, 4xl, 5xl.
+  - `radius/*` → scope `CORNER_RADIUS` (trimmed — radius needs few steps): none, xs, sm, md, lg, xl, 2xl, **full**.
+  - `stroke/*` → scope `STROKE_FLOAT` (border width): none, thin (1), thick (2), thicker (4).
+
+Components consume these directly from Alias. The "components consume Mapped only" rule is a *color/theming* rule; dimensions aren't themed, so don't route them through Mapped.
+
 ## Scope quick-reference
 
 | Use | scopes |
@@ -79,6 +91,10 @@ Create Figma text styles (Hero, H1–H6, Paragraph Large/Medium/Small, Caption) 
 | border | `["STROKE_COLOR"]` |
 | font size / line height / paragraph spacing | `["FONT_SIZE"]` / `["LINE_HEIGHT"]` / `["PARAGRAPH_SPACING"]` |
 | font family / weight (string) | `["FONT_FAMILY"]` / `["FONT_STYLE"]` |
+| spacing / gap / padding | `["GAP"]` |
+| corner radius | `["CORNER_RADIUS"]` |
+| border width (stroke) | `["STROKE_FLOAT"]` |
+| dimension primitive, hidden | `[]` |
 
 ## 2-tier variant
 

@@ -66,6 +66,8 @@ Work **incrementally and sequentially** — never run two `use_figma` calls in p
 
 The defining promise of this skill: **anything you build references the tokens**, so a new component is automatically wired into the system — change a base color or flip a mode and every component updates. Never hardcode hex in a component.
 
+**Dimensions (spacing / radius / stroke):** also add a 4pt numeric scale — raw `Dimension/*` primitives in Brand (hidden), and semantic `spacing/*` (scope `GAP` = gap + padding), `radius/*` (`CORNER_RADIUS`), `stroke/*` (`STROKE_FLOAT`) in **Alias**, not Mapped (they're mode-invariant). Components consume them directly. See [references/architecture.md](references/architecture.md) and Step 4b in [references/generation-recipe.md](references/generation-recipe.md).
+
 ## Key implementation rules (the things that bite)
 
 These are distilled from real runs — see the recipe file for code.
